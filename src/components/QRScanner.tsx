@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { colors, borderRadius, spacing } from '../utils/theme';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -20,7 +21,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
     return (
       <View style={styles.container}>
         <View style={styles.permissionContainer}>
-          <Text style={styles.permissionText}>Camera permission required</Text>
+          <Text style={styles.permissionTitle}>📷</Text>
+          <Text style={styles.permissionText}>Camera permission required to scan QR codes</Text>
           <TouchableOpacity style={styles.button} onPress={requestPermission}>
             <Text style={styles.buttonText}>Grant Permission</Text>
           </TouchableOpacity>
@@ -49,7 +51,9 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
         }}
       >
         <View style={styles.overlay}>
-          <View style={styles.topOverlay} />
+          <View style={styles.topOverlay}>
+            <Text style={styles.headerText}>Scan QR Code</Text>
+          </View>
           <View style={styles.middleRow}>
             <View style={styles.sideOverlay} />
             <View style={styles.scanArea}>
@@ -61,7 +65,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
             <View style={styles.sideOverlay} />
           </View>
           <View style={styles.bottomOverlay}>
-            <Text style={styles.instructionText}>Align QR code within the frame</Text>
+            <Text style={styles.instructionText}>Align the QR code within the frame</Text>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -71,7 +75,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
       
       {scanned && (
         <View style={styles.scannedOverlay}>
-          <Text style={styles.scannedText}>✓ Scanned</Text>
+          <Text style={styles.scannedIcon}>✓</Text>
+          <Text style={styles.scannedText}>Scanned!</Text>
         </View>
       )}
     </View>
@@ -81,133 +86,136 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.bg,
   },
   camera: {
     flex: 1,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  errorText: {
-    fontSize: 24,
-    color: '#FFF',
-    marginBottom: 8,
-  },
-  errorHint: {
-    fontSize: 16,
-    color: '#999',
-    marginBottom: 24,
   },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: spacing.xl,
+  },
+  permissionTitle: {
+    fontSize: 48,
+    marginBottom: 24,
   },
   permissionText: {
     fontSize: 18,
-    color: '#FFF',
-    marginBottom: 24,
+    color: colors.text,
+    marginBottom: 32,
     textAlign: 'center',
+    lineHeight: 26,
   },
   button: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    backgroundColor: colors.gold,
+    paddingVertical: 16,
+    paddingHorizontal: 40,
+    borderRadius: borderRadius.md,
     marginBottom: 16,
   },
   buttonText: {
-    color: '#FFF',
+    color: colors.bg,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   overlay: {
     flex: 1,
   },
   topOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(14, 12, 10, 0.75)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 32,
+  },
+  headerText: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   middleRow: {
     flexDirection: 'row',
   },
   sideOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(14, 12, 10, 0.75)',
   },
   scanArea: {
-    width: 250,
-    height: 250,
+    width: 260,
+    height: 260,
     position: 'relative',
   },
   corner: {
     position: 'absolute',
-    width: 30,
-    height: 30,
-    borderColor: '#3B82F6',
+    width: 36,
+    height: 36,
+    borderColor: colors.gold,
   },
   topLeft: {
     top: 0,
     left: 0,
     borderTopWidth: 4,
     borderLeftWidth: 4,
+    borderTopLeftRadius: 4,
   },
   topRight: {
     top: 0,
     right: 0,
     borderTopWidth: 4,
     borderRightWidth: 4,
+    borderTopRightRadius: 4,
   },
   bottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: 4,
     borderLeftWidth: 4,
+    borderBottomLeftRadius: 4,
   },
   bottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: 4,
     borderRightWidth: 4,
+    borderBottomRightRadius: 4,
   },
   bottomOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(14, 12, 10, 0.75)',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 40,
+    paddingTop: 32,
   },
   instructionText: {
-    color: '#FFF',
-    fontSize: 16,
-    marginBottom: 24,
+    color: colors.text2,
+    fontSize: 15,
+    marginBottom: 32,
   },
   cancelButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFF',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface2,
   },
   cancelButtonText: {
-    color: '#FFF',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   closeButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFF',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
   closeButtonText: {
-    color: '#FFF',
+    color: colors.text2,
     fontSize: 16,
   },
   scannedOverlay: {
@@ -216,13 +224,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(14, 12, 10, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scannedIcon: {
+    color: colors.green,
+    fontSize: 64,
+    marginBottom: 16,
+  },
   scannedText: {
-    color: '#10B981',
-    fontSize: 32,
-    fontWeight: 'bold',
+    color: colors.green,
+    fontSize: 24,
+    fontWeight: '700',
   },
 });

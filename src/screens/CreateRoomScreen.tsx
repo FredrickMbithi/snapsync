@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ScrollView,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -19,6 +20,7 @@ import { generateRoomCode, generateDeviceId, formatQRData } from '../utils/roomC
 import { generateMemberColor } from '../utils/colors';
 import { saveRecentRoom, saveUserName, getUserName } from '../storage/mmkvStore';
 import { getLocalIPAddress } from '../utils/network';
+import { colors, borderRadius, spacing } from '../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'CreateRoom'>;
@@ -28,13 +30,14 @@ export default function CreateRoomScreen({ navigation }: Props) {
   const [roomName, setRoomName] = useState('');
   const [userName, setUserName] = useState('');
   const [hostIP, setHostIP] = useState('');
+  const [eventDate, setEventDate] = useState(new Date().toLocaleDateString());
   const [isCreating, setIsCreating] = useState(false);
   const [isDetectingIP, setIsDetectingIP] = useState(true);
   
   const setCurrentRoom = useAppStore((state) => state.setCurrentRoom);
   const addMember = useAppStore((state) => state.addMember);
 
-  // Load saved username after mount (avoids native module timing issues)
+  // Load saved username after mount
   useEffect(() => {
     try {
       const savedName = getUserName();
@@ -59,6 +62,7 @@ export default function CreateRoomScreen({ navigation }: Props) {
 
   const handleCreateRoom = async () => {
     if (!roomName.trim() || !userName.trim()) {
+      Alert.alert('Missing Info', 'Please enter event name and your name');
       return;
     }
 
@@ -96,12 +100,7 @@ export default function CreateRoomScreen({ navigation }: Props) {
         peerId: deviceId,
       });
       
-      // TODO: Start signaling server
-      // Note: WebSocket server (ws package) cannot run in React Native
-      // For P2P, we need to use react-native-tcp-socket or a cloud relay
-      // For now, the host just creates the room locally
       console.log('[CreateRoom] Room created - host IP:', hostIP);
-      console.log('[CreateRoom] QR data will include:', `snapsync://${room.code}?host=${hostIP}&port=${room.port}`);
       
       // Navigate to room
       navigation.replace('Room');
@@ -115,78 +114,89 @@ export default function CreateRoomScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+      
+      {/* Topbar */}
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.topbarTitle}>Host Event</Text>
+        <View style={styles.topbarRight} />
+      </View>
+      
       <KeyboardAvoidingView
-        style={styles.content}
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.form}>
-          <Text style={styles.title}>Create Room</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Room Name</Text>
+        <ScrollView style={styles.formBody} contentContainerStyle={styles.formContent}>
+          {/* Event Name */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>EVENT NAME</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Birthday Party 🎉"
+              style={styles.fieldInput}
+              placeholder="Sarah's Birthday 🎂"
+              placeholderTextColor={colors.text3}
               value={roomName}
               onChangeText={setRoomName}
               autoFocus
-              returnKeyType="next"
             />
           </View>
           
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Your IP Address</Text>
-            <View style={styles.ipInputContainer}>
-              <TextInput
-                style={[styles.input, styles.ipInput]}
-                placeholder="192.168.1.100"
-                value={hostIP}
-                onChangeText={setHostIP}
-                keyboardType="decimal-pad"
-                autoCapitalize="none"
-                returnKeyType="next"
-                editable={!isDetectingIP}
-              />
-              {isDetectingIP && <ActivityIndicator style={styles.ipLoader} size="small" />}
+          {/* Your Name */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>YOUR NAME</Text>
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Your name"
+              placeholderTextColor={colors.text3}
+              value={userName}
+              onChangeText={setUserName}
+            />
+          </View>
+          
+          {/* Event Date */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>EVENT DATE</Text>
+            <View style={styles.dateInput}>
+              <Text style={styles.dateText}>{eventDate}</Text>
+              <Text style={styles.dateIcon}>📅</Text>
             </View>
-            <Text style={styles.hint}>
-              {isDetectingIP ? 'Detecting IP address...' : 'Enter your device\'s local IP address'}
+          </View>
+          
+          {/* Tip Box */}
+          <View style={styles.tipBox}>
+            <Text style={styles.tipText}>
+              <Text style={styles.tipBold}>How it works: </Text>
+              You get a room code + QR. Show it on your screen — guests scan and join instantly. Photos sync peer-to-peer over WiFi. No internet needed.
             </Text>
           </View>
           
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Your Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="John"
-              value={userName}
-              onChangeText={setUserName}
-              returnKeyType="done"
-              onSubmitEditing={handleCreateRoom}
-            />
-          </View>
-          
+          {/* IP Address (hidden but functional) */}
+          {isDetectingIP && (
+            <View style={styles.ipDetecting}>
+              <ActivityIndicator size="small" color={colors.gold} />
+              <Text style={styles.ipText}>Detecting network...</Text>
+            </View>
+          )}
+        </ScrollView>
+        
+        {/* Bottom CTA */}
+        <View style={styles.formFoot}>
           <TouchableOpacity
             style={[
-              styles.button,
-              (!roomName.trim() || !hostIP.trim() || !userName.trim() || isCreating) && styles.buttonDisabled,
+              styles.btnGold,
+              (!roomName.trim() || !userName.trim() || isCreating) && styles.btnDisabled,
             ]}
             onPress={handleCreateRoom}
-            disabled={!roomName.trim() || !hostIP.trim() || !userName.trim() || isCreating}
+            disabled={!roomName.trim() || !userName.trim() || isCreating}
+            activeOpacity={0.8}
           >
             {isCreating ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colors.bg} />
             ) : (
-              <Text style={styles.buttonText}>Create Room</Text>
+              <Text style={styles.btnGoldText}>Generate Room →</Text>
             )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -197,80 +207,137 @@ export default function CreateRoomScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.bg,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
+  
+  // Topbar
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  form: {
-    width: '100%',
+  backBtn: {
+    width: 44,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 16,
+  backBtnText: {
+    color: colors.gold,
+    fontSize: 28,
     fontWeight: '600',
-    color: '#374151',
+  },
+  topbarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
+  topbarRight: {
+    width: 44,
+  },
+  
+  // Form
+  keyboardView: {
+    flex: 1,
+  },
+  formBody: {
+    flex: 1,
+  },
+  formContent: {
+    padding: spacing.lg,
+  },
+  field: {
+    marginBottom: spacing.lg,
+  },
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 1.5,
+    color: colors.text3,
     marginBottom: 8,
   },
-  ipInputContainer: {
-    position: 'relative',
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
+  fieldInput: {
+    backgroundColor: colors.surface2,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1A1A1A',
+    color: colors.text,
   },
-  ipInput: {
-    paddingRight: 48,
-  },
-  ipLoader: {
-    position: 'absolute',
-    right: 16,
-    top: 14,
-  },
-  hint: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  button: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 12,
+  dateInput: {
+    backgroundColor: colors.surface2,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'space-between',
   },
-  buttonDisabled: {
-    backgroundColor: '#9CA3AF',
+  dateText: {
+    fontSize: 16,
+    color: colors.text,
   },
-  buttonText: {
-    color: '#FFFFFF',
+  dateIcon: {
     fontSize: 18,
+  },
+  
+  // Tip Box
+  tipBox: {
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: 14,
+    marginTop: spacing.sm,
+  },
+  tipText: {
+    fontSize: 13,
+    color: colors.text2,
+    lineHeight: 20,
+  },
+  tipBold: {
+    color: colors.text,
     fontWeight: '600',
   },
-  cancelButton: {
-    paddingVertical: 16,
+  
+  // IP Detecting
+  ipDetecting: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+    gap: 8,
   },
-  cancelButtonText: {
-    color: '#6B7280',
+  ipText: {
+    fontSize: 12,
+    color: colors.text3,
+  },
+  
+  // Bottom CTA
+  formFoot: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  btnGold: {
+    backgroundColor: colors.gold,
+    paddingVertical: 16,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  btnGoldText: {
+    color: colors.bg,
     fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

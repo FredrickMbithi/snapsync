@@ -18,6 +18,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAppStore } from '../store/appStore';
 import { formatQRData } from '../utils/roomCode';
 import SignalingManager from '../networking/signalingManager';
+import { colors, borderRadius, spacing } from '../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Room'>;
@@ -40,13 +41,11 @@ export default function RoomScreen({ navigation }: Props) {
           text: 'Leave',
           style: 'destructive',
           onPress: async () => {
-            // Stop signaling server/client
             if (currentRoom?.isHost) {
               await SignalingManager.stopServer();
             } else {
               SignalingManager.disconnectClient();
             }
-            
             leaveRoom();
             navigation.replace('Landing');
           },
@@ -56,7 +55,6 @@ export default function RoomScreen({ navigation }: Props) {
   };
 
   const handleUploadPhoto = () => {
-    // TODO: Implement photo picking and upload
     Alert.alert('Coming Soon', 'Photo upload will be implemented soon!');
   };
 
@@ -72,8 +70,11 @@ export default function RoomScreen({ navigation }: Props) {
   );
 
   const renderMember = ({ item }: { item: any }) => (
-    <View style={[styles.memberAvatar, { backgroundColor: item.color }]}>
-      <Text style={styles.memberAvatarText}>{item.name[0]}</Text>
+    <View style={styles.memberItem}>
+      <View style={[styles.memberAvatar, { backgroundColor: item.color }]}>
+        <Text style={styles.memberAvatarText}>{item.name[0]}</Text>
+      </View>
+      {item.isHost && <View style={styles.hostBadge} />}
     </View>
   );
 
@@ -83,32 +84,51 @@ export default function RoomScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.roomName}>{currentRoom.name}</Text>
-          <Text style={styles.roomCode}>Code: {currentRoom.code}</Text>
-          {currentRoom.isHost && currentRoom.hostIP && (
-            <Text style={styles.roomCode}>IP: {currentRoom.hostIP}</Text>
-          )}
-        </View>
-        <View style={styles.headerRight}>
-          {currentRoom.isHost && (
-            <TouchableOpacity
-              style={styles.qrButton}
-              onPress={() => setShowQRCode(true)}
-            >
-              <Text style={styles.qrButtonText}>QR</Text>
-            </TouchableOpacity>
-          )}
+        <View style={styles.headerTop}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.roomName}>{currentRoom.name}</Text>
+            <View style={styles.codeRow}>
+              <View style={styles.codePill}>
+                <Text style={styles.codePillText}>{currentRoom.code}</Text>
+              </View>
+              {currentRoom.isHost && (
+                <TouchableOpacity
+                  style={styles.qrBtn}
+                  onPress={() => setShowQRCode(true)}
+                >
+                  <Text style={styles.qrBtnText}>📱 QR</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
           <TouchableOpacity
-            style={styles.leaveButton}
+            style={styles.leaveBtn}
             onPress={handleLeaveRoom}
           >
-            <Text style={styles.leaveButtonText}>Leave</Text>
+            <Text style={styles.leaveBtnText}>Leave</Text>
           </TouchableOpacity>
+        </View>
+        
+        {/* Stats Bar */}
+        <View style={styles.statsBar}>
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>{members.length}</Text>
+            <Text style={styles.statLabel}>people</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <Text style={styles.statNumber}>{photos.length}</Text>
+            <Text style={styles.statLabel}>photos</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.liveStat}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
         </View>
       </View>
       
@@ -122,17 +142,15 @@ export default function RoomScreen({ navigation }: Props) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.membersList}
         />
-        <Text style={styles.membersCount}>
-          {members.length} {members.length === 1 ? 'member' : 'members'}
-        </Text>
       </View>
       
       {/* Photos */}
       <View style={styles.photosContainer}>
         {photos.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No photos yet</Text>
-            <Text style={styles.emptyStateHint}>Tap + to add some!</Text>
+            <Text style={styles.emptyIcon}>📷</Text>
+            <Text style={styles.emptyTitle}>No photos yet</Text>
+            <Text style={styles.emptySubtitle}>Tap the button below to add some!</Text>
           </View>
         ) : (
           <FlatList
@@ -145,15 +163,18 @@ export default function RoomScreen({ navigation }: Props) {
         )}
       </View>
       
-      {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleUploadPhoto}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      {/* Upload Strip */}
+      <View style={styles.uploadStrip}>
+        <TouchableOpacity
+          style={styles.uploadBtn}
+          onPress={handleUploadPhoto}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.uploadBtnText}>+ Upload Photos</Text>
+        </TouchableOpacity>
+      </View>
       
-      {/* QR Code Modal (Host Only) */}
+      {/* QR Code Modal */}
       {currentRoom.isHost && (
         <Modal
           visible={showQRCode}
@@ -174,20 +195,29 @@ export default function RoomScreen({ navigation }: Props) {
                     port: currentRoom.port,
                     name: currentRoom.name,
                   })}
-                  size={250}
+                  size={220}
+                  backgroundColor={colors.text}
+                  color={colors.bg}
                 />
               </View>
               
               <View style={styles.codeDisplay}>
-                <Text style={styles.codeLabel}>Manual Code:</Text>
-                <Text style={styles.codeValue}>{currentRoom.code}</Text>
+                <Text style={styles.codeDisplayLabel}>CODE</Text>
+                <Text style={styles.codeDisplayValue}>{currentRoom.code}</Text>
               </View>
               
+              {currentRoom.hostIP && (
+                <View style={styles.ipDisplay}>
+                  <Text style={styles.ipDisplayLabel}>IP</Text>
+                  <Text style={styles.ipDisplayValue}>{currentRoom.hostIP}</Text>
+                </View>
+              )}
+              
               <TouchableOpacity
-                style={styles.closeButton}
+                style={styles.closeBtn}
                 onPress={() => setShowQRCode(false)}
               >
-                <Text style={styles.closeButtonText}>Close</Text>
+                <Text style={styles.closeBtnText}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -200,103 +230,188 @@ export default function RoomScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.bg,
   },
+  
+  // Header
   header: {
+    backgroundColor: colors.surface1,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    alignItems: 'flex-start',
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
   },
   headerLeft: {
     flex: 1,
   },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   roomName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
   },
-  roomCode: {
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  codePill: {
+    backgroundColor: colors.surface3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+  },
+  codePillText: {
+    color: colors.gold,
     fontSize: 14,
-    color: '#6B7280',
-    marginTop: 2,
+    fontWeight: '700',
+    letterSpacing: 2,
   },
-  qrButton: {
-    paddingHorizontal: 16,
+  qrBtn: {
+    backgroundColor: colors.surface2,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  qrBtnText: {
+    color: colors.text2,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  leaveBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: '#DBEAFE',
-    borderRadius: 8,
+    borderRadius: borderRadius.md,
   },
-  qrButtonText: {
-    color: '#1E40AF',
+  leaveBtnText: {
+    color: colors.red,
     fontSize: 14,
     fontWeight: '600',
   },
-  leaveButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 8,
+  
+  // Stats Bar
+  statsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface2,
+    gap: 20,
   },
-  leaveButtonText: {
-    color: '#DC2626',
-    fontSize: 14,
-    fontWeight: '600',
+  stat: {
+    alignItems: 'center',
   },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: colors.text3,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.border,
+  },
+  liveStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.green,
+  },
+  liveText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.green,
+    letterSpacing: 1,
+  },
+  
+  // Members
   membersContainer: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 16,
+    backgroundColor: colors.surface1,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
   membersList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     gap: 12,
   },
+  memberItem: {
+    position: 'relative',
+  },
   memberAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface1,
   },
   memberAvatarText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  membersCount: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 8,
+  hostBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.gold,
+    borderWidth: 2,
+    borderColor: colors.surface1,
   },
+  
+  // Photos
   photosContainer: {
     flex: 1,
+    backgroundColor: colors.bg,
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: spacing.xl,
   },
-  emptyStateText: {
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyTitle: {
     fontSize: 18,
-    color: '#6B7280',
+    fontWeight: '600',
+    color: colors.text,
     marginBottom: 8,
   },
-  emptyStateHint: {
+  emptySubtitle: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: colors.text3,
+    textAlign: 'center',
   },
   photosList: {
-    padding: 8,
+    padding: 4,
   },
   photoItem: {
     width: '33.33%',
@@ -305,106 +420,128 @@ const styles = StyleSheet.create({
   },
   photoPlaceholder: {
     flex: 1,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
+    backgroundColor: colors.surface2,
+    borderRadius: borderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
   photoPlaceholderText: {
-    fontSize: 32,
+    fontSize: 28,
   },
   photoBadge: {
     position: 'absolute',
     bottom: 8,
     right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.surface1,
   },
   photoBadgeText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 11,
+    fontWeight: '700',
   },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
+  
+  // Upload Strip
+  uploadStrip: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+    backgroundColor: colors.surface1,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  uploadBtn: {
+    backgroundColor: colors.gold,
+    paddingVertical: 16,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: '300',
+  uploadBtnText: {
+    color: colors.bg,
+    fontSize: 16,
+    fontWeight: '700',
   },
+  
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: colors.surface1,
+    borderRadius: borderRadius.lg,
+    padding: 28,
     alignItems: 'center',
-    maxWidth: '90%',
+    marginHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
     marginBottom: 4,
   },
   modalSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: 15,
+    color: colors.text2,
     marginBottom: 24,
   },
   qrCodeContainer: {
     padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: colors.text,
+    borderRadius: borderRadius.md,
     marginBottom: 24,
   },
   codeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+    marginBottom: 12,
+  },
+  codeDisplayLabel: {
+    fontSize: 11,
+    color: colors.text3,
+    fontWeight: '500',
+    letterSpacing: 1,
+  },
+  codeDisplayValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.gold,
+    letterSpacing: 4,
+  },
+  ipDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 24,
   },
-  codeLabel: {
-    fontSize: 14,
-    color: '#6B7280',
+  ipDisplayLabel: {
+    fontSize: 11,
+    color: colors.text3,
+    fontWeight: '500',
+    letterSpacing: 1,
   },
-  codeValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    letterSpacing: 2,
+  ipDisplayValue: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text2,
   },
-  closeButton: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 8,
+  closeBtn: {
+    backgroundColor: colors.surface3,
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    borderRadius: borderRadius.md,
   },
-  closeButtonText: {
-    color: '#FFFFFF',
+  closeBtnText: {
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },

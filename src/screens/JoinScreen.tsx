@@ -12,6 +12,7 @@ import {
   Platform,
   Alert,
   Modal,
+  ScrollView,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -21,6 +22,7 @@ import { generateMemberColor } from '../utils/colors';
 import { saveUserName, getUserName } from '../storage/mmkvStore';
 import SignalingManager from '../networking/signalingManager';
 import QRScanner from '../components/QRScanner';
+import { colors, borderRadius, spacing } from '../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Join'>;
@@ -29,13 +31,15 @@ type Props = {
 export default function JoinScreen({ navigation }: Props) {
   const [roomCode, setRoomCode] = useState('');
   const [userName, setUserName] = useState('');
-  const [hostIP, setHostIP] = useState(''); // Will come from QR scan or manual entry
+  const [hostIP, setHostIP] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   
   const setCurrentRoom = useAppStore((state) => state.setCurrentRoom);
+  const addMember = useAppStore((state) => state.addMember);
+  const setConnectionStatus = useAppStore((state) => state.setConnectionStatus);
   
-  // Load saved username after mount (avoids native module timing issues)
+  // Load saved username after mount
   useEffect(() => {
     try {
       const savedName = getUserName();
@@ -44,11 +48,10 @@ export default function JoinScreen({ navigation }: Props) {
       console.warn('Failed to load saved username:', e);
     }
   }, []);
-  const addMember = useAppStore((state) => state.addMember);
-  const setConnectionStatus = useAppStore((state) => state.setConnectionStatus);
 
   const handleJoinRoom = async () => {
     if (!roomCode.trim() || !userName.trim()) {
+      Alert.alert('Missing Info', 'Please enter room code and your name');
       return;
     }
 
@@ -61,7 +64,7 @@ export default function JoinScreen({ navigation }: Props) {
       
       const room = {
         id: `guest-${deviceId}`,
-        name: 'Room', // Will be updated from host
+        name: 'Room',
         code: roomCode.trim().toUpperCase(),
         myName: userName.trim(),
         myId: deviceId,
@@ -70,10 +73,8 @@ export default function JoinScreen({ navigation }: Props) {
         hostIP: hostIP.trim(),
       };
       
-      // Save preferences
       saveUserName(userName.trim());
       
-      // Create member info
       const myMember = {
         id: deviceId,
         name: userName.trim(),
@@ -82,7 +83,6 @@ export default function JoinScreen({ navigation }: Props) {
         peerId: deviceId,
       };
       
-      // Set room state first
       setCurrentRoom(room);
       addMember(myMember);
       
@@ -90,7 +90,6 @@ export default function JoinScreen({ navigation }: Props) {
       try {
         const client = SignalingManager.getClient(hostIP.trim(), 8888);
         
-        // Set up event handlers
         client.on('onConnect', () => {
           console.log('[JoinScreen] Connected to signaling server');
           setConnectionStatus('connected');
@@ -103,14 +102,11 @@ export default function JoinScreen({ navigation }: Props) {
         
         client.on('onPeerList', (peers) => {
           console.log('[JoinScreen] Received peer list:', peers.length);
-          // TODO: Add peers to member list
-          // TODO: Initiate WebRTC connections
         });
         
         client.on('onMemberJoin', (member) => {
           console.log('[JoinScreen] Member joined:', member.name);
           addMember(member);
-          // TODO: Initiate WebRTC connection with new peer
         });
         
         client.on('onError', (error) => {
@@ -118,7 +114,6 @@ export default function JoinScreen({ navigation }: Props) {
           Alert.alert('Connection Error', 'Lost connection to host. Please try rejoining.');
         });
         
-        // Connect
         await client.connect(myMember);
         console.log('[JoinScreen] Successfully joined room');
         
@@ -134,7 +129,6 @@ export default function JoinScreen({ navigation }: Props) {
         return;
       }
       
-      // Navigate to room
       navigation.replace('Room');
     } catch (error) {
       console.error('Error joining room:', error);
@@ -157,7 +151,6 @@ export default function JoinScreen({ navigation }: Props) {
       return;
     }
     
-    // Fill in the form with scanned data
     setRoomCode(parsed.code);
     setHostIP(parsed.host);
     setShowScanner(false);
@@ -165,52 +158,52 @@ export default function JoinScreen({ navigation }: Props) {
     Alert.alert(
       'QR Code Scanned',
       `Room: ${parsed.name}\nCode: ${parsed.code}`,
-      [
-        { text: 'OK', onPress: () => {} }
-      ]
+      [{ text: 'OK' }]
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+      
+      {/* Topbar */}
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.topbarTitle}>Join Event</Text>
+        <View style={styles.topbarRight} />
+      </View>
+      
       <KeyboardAvoidingView
-        style={styles.content}
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.form}>
-          <Text style={styles.title}>Join Room</Text>
-          
+        <ScrollView style={styles.formBody} contentContainerStyle={styles.formContent}>
+          {/* Scan QR Button */}
           <TouchableOpacity
-            style={styles.scanButton}
+            style={styles.scanBtn}
             onPress={handleQRScan}
+            activeOpacity={0.8}
           >
-            <Text style={styles.scanButtonText}>📷 Scan QR Code</Text>
+            <Text style={styles.scanBtnIcon}>📷</Text>
+            <Text style={styles.scanBtnText}>Scan QR Code</Text>
           </TouchableOpacity>
           
+          {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
+            <Text style={styles.dividerText}>OR ENTER MANUALLY</Text>
             <View style={styles.dividerLine} />
           </View>
           
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Host IP Address</Text>
+          {/* Room Code */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>ROOM CODE</Text>
             <TextInput
-              style={styles.input}
-              placeholder="192.168.1.100"
-              value={hostIP}
-              onChangeText={setHostIP}
-              keyboardType="decimal-pad"
-              autoCapitalize="none"
-            />
-          </View>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Room Code</Text>
-            <TextInput
-              style={styles.input}
+              style={[styles.fieldInput, styles.codeInput]}
               placeholder="KP73"
+              placeholderTextColor={colors.text3}
               value={roomCode}
               onChangeText={(text) => setRoomCode(text.toUpperCase())}
               autoCapitalize="characters"
@@ -218,38 +211,57 @@ export default function JoinScreen({ navigation }: Props) {
             />
           </View>
           
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Your Name</Text>
+          {/* Host IP */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>HOST IP ADDRESS</Text>
             <TextInput
-              style={styles.input}
-              placeholder="John"
-              value={userName}
-              onChangeText={setUserName}
-              returnKeyType="done"
-              onSubmitEditing={handleJoinRoom}
+              style={styles.fieldInput}
+              placeholder="192.168.1.100"
+              placeholderTextColor={colors.text3}
+              value={hostIP}
+              onChangeText={setHostIP}
+              keyboardType="decimal-pad"
+              autoCapitalize="none"
             />
           </View>
           
+          {/* Your Name */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>YOUR NAME</Text>
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Your name"
+              placeholderTextColor={colors.text3}
+              value={userName}
+              onChangeText={setUserName}
+            />
+          </View>
+          
+          {/* Tip Box */}
+          <View style={styles.tipBox}>
+            <Text style={styles.tipText}>
+              <Text style={styles.tipBold}>Tip: </Text>
+              Ask the host to show their QR code for quick joining. Make sure you're connected to the same WiFi network.
+            </Text>
+          </View>
+        </ScrollView>
+        
+        {/* Bottom CTA */}
+        <View style={styles.formFoot}>
           <TouchableOpacity
             style={[
-              styles.button,
-              (!roomCode.trim() || !userName.trim() || !hostIP.trim() || isJoining) && styles.buttonDisabled,
+              styles.btnGold,
+              (!roomCode.trim() || !userName.trim() || isJoining) && styles.btnDisabled,
             ]}
             onPress={handleJoinRoom}
-            disabled={!roomCode.trim() || !userName.trim() || !hostIP.trim() || isJoining}
+            disabled={!roomCode.trim() || !userName.trim() || isJoining}
+            activeOpacity={0.8}
           >
             {isJoining ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colors.bg} />
             ) : (
-              <Text style={styles.buttonText}>Join Room</Text>
+              <Text style={styles.btnGoldText}>Join Room →</Text>
             )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -272,93 +284,155 @@ export default function JoinScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.bg,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  form: {
-    width: '100%',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  scanButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 12,
+  
+  // Topbar
+  topbar: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    paddingVertical: 14,
+    paddingHorizontal: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  scanButtonText: {
-    color: '#3B82F6',
-    fontSize: 18,
+  backBtn: {
+    width: 44,
+  },
+  backBtnText: {
+    color: colors.gold,
+    fontSize: 28,
     fontWeight: '600',
   },
+  topbarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
+  topbarRight: {
+    width: 44,
+  },
+  
+  // Form
+  keyboardView: {
+    flex: 1,
+  },
+  formBody: {
+    flex: 1,
+  },
+  formContent: {
+    padding: spacing.lg,
+  },
+  
+  // Scan Button
+  scanBtn: {
+    backgroundColor: colors.surface2,
+    borderWidth: 2,
+    borderColor: colors.gold,
+    borderRadius: borderRadius.md,
+    paddingVertical: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  scanBtnIcon: {
+    fontSize: 22,
+  },
+  scanBtnText: {
+    color: colors.gold,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  // Divider
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: colors.border,
   },
   dividerText: {
-    marginHorizontal: 16,
-    color: '#9CA3AF',
-    fontSize: 14,
+    marginHorizontal: 12,
+    color: colors.text3,
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 1,
   },
-  inputGroup: {
-    marginBottom: 24,
+  
+  // Fields
+  field: {
+    marginBottom: spacing.lg,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 1.5,
+    color: colors.text3,
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
+  fieldInput: {
+    backgroundColor: colors.surface2,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1A1A1A',
+    color: colors.text,
   },
-  button: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
+  codeInput: {
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: 8,
+    textAlign: 'center',
+    paddingVertical: 18,
   },
-  buttonDisabled: {
-    backgroundColor: '#9CA3AF',
+  
+  // Tip Box
+  tipBox: {
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: 14,
+    marginTop: spacing.sm,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
+  tipText: {
+    fontSize: 13,
+    color: colors.text2,
+    lineHeight: 20,
+  },
+  tipBold: {
+    color: colors.text,
     fontWeight: '600',
   },
-  cancelButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
+  
+  // Bottom CTA
+  formFoot: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
-  cancelButtonText: {
-    color: '#6B7280',
+  btnGold: {
+    backgroundColor: colors.gold,
+    paddingVertical: 16,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  btnGoldText: {
+    color: colors.bg,
     fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
