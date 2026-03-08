@@ -1222,10 +1222,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@react-native-community/netinfo@^12.0.1":
-  version "12.0.1"
-  resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-12.0.1.tgz#fec75f4093c27778479d8927b4f51f133b8a13a4"
-  integrity sha512-P/3caXIvfYSJG8AWJVefukg+ZGRPs+M4Lp3pNJtgcTYoJxCjWrKQGNnCkj/Cz//zWa/avGed0i/wzm0T8vV2IQ==
+"@react-native-community/netinfo@11.5.2":
+  version "11.5.2"
+  resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-11.5.2.tgz#daf3bc1b5cf6e9fc6725600c9e95875b5e50e694"
+  integrity sha512-/g0m65BtX9HU+bPiCH2517bOHpEIUsGrWFXDzi1a5nNKn5KujQgm04WhL7/OSXWKHyrT8VVtUoJA0XKRxueBpQ==
 
 "@react-native/assets-registry@0.83.2":
   version "0.83.2"
@@ -2363,6 +2363,38 @@ expo-constants@~55.0.7:
     "@expo/config" "~55.0.8"
     "@expo/env" "~2.1.1"
 
+expo-dev-client@~55.0.11:
+  version "55.0.11"
+  resolved "https://registry.yarnpkg.com/expo-dev-client/-/expo-dev-client-55.0.11.tgz#8230906715aaeda2c14cc43df8aa4832fe12ce98"
+  integrity sha512-7Be3DMgm+lmfShqGvym6kva77Cr7wWqz+Bp3cYUOwDGvC43nHTCzkDCjA2dMVgge8Y26xu4sW8KDM47Jf3/Zuw==
+  dependencies:
+    expo-dev-launcher "55.0.12"
+    expo-dev-menu "55.0.11"
+    expo-dev-menu-interface "55.0.1"
+    expo-manifests "~55.0.9"
+    expo-updates-interface "~55.1.3"
+
+expo-dev-launcher@55.0.12:
+  version "55.0.12"
+  resolved "https://registry.yarnpkg.com/expo-dev-launcher/-/expo-dev-launcher-55.0.12.tgz#14e2a1032f4c3299a2087c27c2bf6eb7d3b657c3"
+  integrity sha512-ZXml3Cn/rqxpDTcEcnLTLYLkVN0hoB3nxNOkdGsYBCcg+atfxHDTCeB6GTEza949Zx4Cbr+EJYDhgurUXPhJzQ==
+  dependencies:
+    "@expo/schema-utils" "^55.0.2"
+    expo-dev-menu "55.0.11"
+    expo-manifests "~55.0.9"
+
+expo-dev-menu-interface@55.0.1:
+  version "55.0.1"
+  resolved "https://registry.yarnpkg.com/expo-dev-menu-interface/-/expo-dev-menu-interface-55.0.1.tgz#b1bb15b3031884e42d3dffcc7997931b749c1248"
+  integrity sha512-FkNtwq1q6NmYoy28pj+ZLuHmirJgc039pQbJ167MZJIaprLcMN1yy67qA7xBHK+FNJ8AN8kGCtMTPByg5UC72A==
+
+expo-dev-menu@55.0.11:
+  version "55.0.11"
+  resolved "https://registry.yarnpkg.com/expo-dev-menu/-/expo-dev-menu-55.0.11.tgz#abd1f059f4eb768e6c7234490640499bfabdc43c"
+  integrity sha512-ZT4tBErubYs7Luy4+PtW/m1zBsjVdd3jYn2/FaT5xnXjaXSVkZm3Gc9ApS+a1JE0Jr4DdHL2ZJ6qUhbcSsyp5Q==
+  dependencies:
+    expo-dev-menu-interface "55.0.1"
+
 expo-file-system@~55.0.10:
   version "55.0.10"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-55.0.10.tgz#fae0a424f404a456522193346cf07e9e51e2df26"
@@ -2375,10 +2407,23 @@ expo-font@~55.0.4:
   dependencies:
     fontfaceobserver "^2.1.0"
 
+expo-json-utils@~55.0.0:
+  version "55.0.0"
+  resolved "https://registry.yarnpkg.com/expo-json-utils/-/expo-json-utils-55.0.0.tgz#9af6675e63c6c3715e4989fcec2a84d79fd6e6ae"
+  integrity sha512-aupt/o5PDAb8dXDCb0JcRdkqnTLxe/F+La7jrnyd/sXlYFfRgBJLFOa1SqVFXm1E/Xam1SE/yw6eAb+DGY7Arg==
+
 expo-keep-awake@~55.0.4:
   version "55.0.4"
   resolved "https://registry.yarnpkg.com/expo-keep-awake/-/expo-keep-awake-55.0.4.tgz#8fe3685b75bda28e15268821a384e069f0395fab"
   integrity sha512-vwfdMtMS5Fxaon8gC0AiE70SpxTsHJ+rjeoVJl8kdfdbxczF7OIaVmfjFJ5Gfigd/WZiLqxhfZk34VAkXF4PNg==
+
+expo-manifests@~55.0.9:
+  version "55.0.9"
+  resolved "https://registry.yarnpkg.com/expo-manifests/-/expo-manifests-55.0.9.tgz#7cc479cf3af5f01369e40d068018d54a5711d44f"
+  integrity sha512-i82j3X4hbxYDe6kxUw4u8WfvbvTj2w+9BD9WKuL0mFRy+MjvdzdyaqAjEViWCKo/alquP/hTApDTQBb3UmWhkg==
+  dependencies:
+    "@expo/config" "~55.0.8"
+    expo-json-utils "~55.0.0"
 
 expo-modules-autolinking@55.0.8:
   version "55.0.8"
@@ -2408,6 +2453,11 @@ expo-status-bar@~55.0.4:
   integrity sha512-BPDjUXKqv1F9j2YNGLRZfkBEZXIEEpqj+t81y4c+4fdSN3Pos7goIHXgcl2ozbKQLgKRZQyNZQtbUgh5UjHYUQ==
   dependencies:
     react-native-is-edge-to-edge "^1.2.1"
+
+expo-updates-interface@~55.1.3:
+  version "55.1.3"
+  resolved "https://registry.yarnpkg.com/expo-updates-interface/-/expo-updates-interface-55.1.3.tgz#cecc1821a9f5e773739144bea7ad93c6a485baea"
+  integrity sha512-UVVIiZqymQZJL+o/jh65kXOI97xdkbqBJJM0LMabaPMNLFnc6/WvOMOzmQs7SPyKb8+0PeBaFd7tj5DzF6JeQg==
 
 expo@~55.0.5:
   version "55.0.5"
@@ -3864,6 +3914,11 @@ react-devtools-core@^6.1.5:
     shell-quote "^1.6.1"
     ws "^7"
 
+react-freeze@^1.0.0:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/react-freeze/-/react-freeze-1.0.4.tgz#cbbea2762b0368b05cbe407ddc9d518c57c6f3ad"
+  integrity sha512-r4F0Sec0BLxWicc7HEyo2x3/2icUTrRmDjaaRyzzn+7aDyFZliszMDOgLVwSnQnYENOlL1o569Ze2HZefk8clA==
+
 react-is@^16.13.1:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
@@ -3889,6 +3944,11 @@ react-native-mmkv@^4.2.0:
   resolved "https://registry.yarnpkg.com/react-native-mmkv/-/react-native-mmkv-4.2.0.tgz#c7d2760d4784671ad3d8d5cd18f78fc932bfb1fd"
   integrity sha512-LB1GeqkSJtu33li0nzgvo4W2RbsGfObXgQG2LBmbxfQP3sX+Q13OANoeKnJ1vwU8v4xNn4jWrA4vl3GuOt1/Rw==
 
+react-native-nitro-modules@^0.35.0:
+  version "0.35.0"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.35.0.tgz#e026055bceb1e5b43a54b131d0740b8e61412b2b"
+  integrity sha512-Eho1yEcLbsteGpBFn2XZOp5FIptnEciWzuYBW49S0jo41Un2LeyesIO/MqYLY/c5o7D9Fw9th4pxGtV7OAb0+g==
+
 react-native-qrcode-svg@^6.3.21:
   version "6.3.21"
   resolved "https://registry.yarnpkg.com/react-native-qrcode-svg/-/react-native-qrcode-svg-6.3.21.tgz#af873cf8e5b9fc68315a2c267ff6563d55c56abb"
@@ -3897,6 +3957,19 @@ react-native-qrcode-svg@^6.3.21:
     prop-types "^15.8.0"
     qrcode "^1.5.4"
     text-encoding "^0.7.0"
+
+react-native-safe-area-context@~5.6.2:
+  version "5.6.2"
+  resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-5.6.2.tgz#283e006f5b434fb247fcb4be0971ad7473d5c560"
+  integrity sha512-4XGqMNj5qjUTYywJqpdWZ9IG8jgkS3h06sfVjfw5yZQZfWnRFXczi0GnYyFyCc2EBps/qFmoCH8fez//WumdVg==
+
+react-native-screens@~4.23.0:
+  version "4.23.0"
+  resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-4.23.0.tgz#81574b1b0cc4ac6c9ed63e46eca7126f37affe86"
+  integrity sha512-XhO3aK0UeLpBn4kLecd+J+EDeRRJlI/Ro9Fze06vo1q163VeYtzfU9QS09/VyDFMWR1qxDC1iazCArTPSFFiPw==
+  dependencies:
+    react-freeze "^1.0.0"
+    warn-once "^0.1.0"
 
 react-native-svg@^15.15.3:
   version "15.15.3"
@@ -4478,7 +4551,7 @@ walker@^1.0.7, walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-warn-once@0.1.1, warn-once@^0.1.1:
+warn-once@0.1.1, warn-once@^0.1.0, warn-once@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/warn-once/-/warn-once-0.1.1.tgz#952088f4fb56896e73fd4e6a3767272a3fccce43"
   integrity sha512-VkQZJbO8zVImzYFteBXvBOZEl1qL175WH8VmZcxF2fZAoudNhNDvHi+doCaAEdU2l2vtcIwa2zn0QK5+I1HQ3Q==

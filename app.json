@@ -45,7 +45,9 @@
         "ACCESS_WIFI_STATE",
         "CHANGE_WIFI_MULTICAST_STATE",
         "RECORD_AUDIO",
-        "MODIFY_AUDIO_SETTINGS"
+        "MODIFY_AUDIO_SETTINGS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -62,8 +64,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "snapsync-p2p-photos"
+        "projectId": "f2688908-8688-40eb-a0f5-bc516f522194"
       }
-    }
+    },
+    "owner": "fredrickmbithi"
   }
 }
