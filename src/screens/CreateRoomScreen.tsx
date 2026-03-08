@@ -18,7 +18,6 @@ import { useAppStore } from '../store/appStore';
 import { generateRoomCode, generateDeviceId, formatQRData } from '../utils/roomCode';
 import { generateMemberColor } from '../utils/colors';
 import { saveRecentRoom, saveUserName, getUserName } from '../storage/mmkvStore';
-import SignalingManager from '../networking/signalingManager';
 import { getLocalIPAddress } from '../utils/network';
 
 type Props = {
@@ -27,13 +26,23 @@ type Props = {
 
 export default function CreateRoomScreen({ navigation }: Props) {
   const [roomName, setRoomName] = useState('');
-  const [userName, setUserName] = useState(getUserName() || '');
+  const [userName, setUserName] = useState('');
   const [hostIP, setHostIP] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isDetectingIP, setIsDetectingIP] = useState(true);
   
   const setCurrentRoom = useAppStore((state) => state.setCurrentRoom);
   const addMember = useAppStore((state) => state.addMember);
+
+  // Load saved username after mount (avoids native module timing issues)
+  useEffect(() => {
+    try {
+      const savedName = getUserName();
+      if (savedName) setUserName(savedName);
+    } catch (e) {
+      console.warn('Failed to load saved username:', e);
+    }
+  }, []);
 
   // Auto-detect IP address on mount
   useEffect(() => {
@@ -87,25 +96,12 @@ export default function CreateRoomScreen({ navigation }: Props) {
         peerId: deviceId,
       });
       
-      // Start WebSocket signaling server
-      try {
-        const server = SignalingManager.getServer(8888);
-        await server.start((clients) => {
-          console.log(`[CreateRoom] Connected clients: ${clients.length}`);
-          // Members are added via signaling messages
-        });
-        console.log('[CreateRoom] Signaling server started on port 8888');
-      } catch (error) {
-        console.error('[CreateRoom] Failed to start signaling server:', error);
-        Alert.alert(
-          'Server Error',
-          'Failed to start signaling server. Please try again.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        );
-        return;
-      }
-      
-      // TODO: Start mDNS advertising
+      // TODO: Start signaling server
+      // Note: WebSocket server (ws package) cannot run in React Native
+      // For P2P, we need to use react-native-tcp-socket or a cloud relay
+      // For now, the host just creates the room locally
+      console.log('[CreateRoom] Room created - host IP:', hostIP);
+      console.log('[CreateRoom] QR data will include:', `snapsync://${room.code}?host=${hostIP}&port=${room.port}`);
       
       // Navigate to room
       navigation.replace('Room');

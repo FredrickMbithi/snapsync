@@ -1,0 +1,18 @@
+{
+  "name": "snapsync-signaling-server",
+  "version": "1.0.0",
+  "description": "WebSocket signaling server for SnapSync",
+  "main": "signalingServer.ts",
+  "scripts": {
+    "start": "npx ts-node signalingServer.ts",
+    "start:port": "npx ts-node signalingServer.ts"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

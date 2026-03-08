@@ -1,33 +1,30 @@
 /**
- * Signaling Server Manager
- * Singleton to manage the WebSocket signaling server instance
+ * Signaling Manager
+ * Manages the WebSocket signaling client for React Native
+ * Note: The signaling server must run separately as a Node.js process
  */
 
-import { SignalingServer } from './signalingServer';
 import { SignalingClient } from './signalingClient';
 
 class SignalingManager {
-  private static serverInstance: SignalingServer | null = null;
   private static clientInstance: SignalingClient | null = null;
 
   /**
-   * Get or create server instance (for host)
+   * Note: Server cannot run in React Native (ws package requires Node.js)
+   * Run the server separately: node server/signalingServer.js
    */
-  static getServer(port: number = 8888): SignalingServer {
-    if (!this.serverInstance) {
-      this.serverInstance = new SignalingServer(port);
-    }
-    return this.serverInstance;
+  static getServer(_port: number = 8888): never {
+    throw new Error(
+      'SignalingServer cannot run in React Native. ' +
+      'Run the server separately as a Node.js process: node server/signalingServer.js'
+    );
   }
 
   /**
-   * Stop and clear server instance
+   * Server cannot run in React Native
    */
   static async stopServer(): Promise<void> {
-    if (this.serverInstance) {
-      await this.serverInstance.stop();
-      this.serverInstance = null;
-    }
+    console.warn('SignalingServer is not running in React Native');
   }
 
   /**
@@ -51,10 +48,10 @@ class SignalingManager {
   }
 
   /**
-   * Check if server is running
+   * Server cannot run in React Native
    */
   static isServerRunning(): boolean {
-    return this.serverInstance?.isRunning() ?? false;
+    return false;
   }
 
   /**
@@ -68,7 +65,6 @@ class SignalingManager {
    * Clean up all instances (call on app cleanup)
    */
   static async cleanup(): Promise<void> {
-    await this.stopServer();
     this.disconnectClient();
   }
 }

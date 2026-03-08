@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-
-// Dynamically import expo-camera if available
-let Camera: any = null;
-let useCameraPermissions: any = null;
-let BarcodeScanningResult: any = null;
-
-try {
-  const CameraModule = require('expo-camera');
-  Camera = CameraModule.Camera;
-  useCameraPermissions = CameraModule.useCameraPermissions;
-} catch (e) {
-  console.log('[QRScanner] expo-camera not available');
-}
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -20,25 +8,10 @@ interface QRScannerProps {
 }
 
 export default function QRScanner({ onScan, onClose }: QRScannerProps) {
-  const [permission, requestPermission] = useCameraPermissions ? useCameraPermissions() : [null, () => {}];
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
-  // Check if camera is available
-  if (!Camera || !useCameraPermissions) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>📷 Camera not available</Text>
-          <Text style={styles.errorHint}>Please install expo-camera</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  // Handle permissions
+  // Handle permissions loading
   if (!permission) {
     return <View style={styles.container} />;
   }
@@ -59,7 +32,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
     );
   }
 
-  const handleBarCodeScanned = ({ type, data }: any) => {
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     if (scanned) return;
     setScanned(true);
     onScan(data);
@@ -67,8 +40,9 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
   return (
     <View style={styles.container}>
-      <Camera
+      <CameraView
         style={styles.camera}
+        facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
@@ -93,7 +67,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
             </TouchableOpacity>
           </View>
         </View>
-      </Camera>
+      </CameraView>
       
       {scanned && (
         <View style={styles.scannedOverlay}>

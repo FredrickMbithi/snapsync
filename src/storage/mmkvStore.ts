@@ -7,11 +7,26 @@ import { MMKV } from 'react-native-mmkv';
 import { generateDeviceId } from '../utils/roomCode';
 import { Room } from '../types/models';
 
-// Initialize MMKV instance
-export const storage = new MMKV({
-  id: 'snapsync-storage',
-  encryptionKey: 'snapsync-encryption-key-2026',
-});
+// Lazy initialization for MMKV to avoid EventEmitter errors
+let _storage: MMKV | null = null;
+
+function getStorage(): MMKV {
+  if (!_storage) {
+    _storage = new MMKV({
+      id: 'snapsync-storage',
+      encryptionKey: 'snapsync-encryption-key-2026',
+    });
+  }
+  return _storage;
+}
+
+// Export getter for storage access
+export const storage = {
+  getString: (key: string) => getStorage().getString(key),
+  set: (key: string, value: string | number | boolean) => getStorage().set(key, value),
+  delete: (key: string) => getStorage().delete(key),
+  clearAll: () => getStorage().clearAll(),
+};
 
 // Storage keys
 const KEYS = {

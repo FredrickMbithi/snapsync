@@ -1,10 +1,12 @@
 /**
  * WebSocket Signaling Server
- * Runs on the host device to coordinate WebRTC peer connections
+ * Runs as a standalone Node.js process to coordinate WebRTC peer connections
+ * 
+ * Usage: npx ts-node server/signalingServer.ts [port]
  */
 
-import { Server as WebSocketServer, WebSocket } from 'ws';
-import type { SignalingMessage, Member } from '../types/models';
+import WebSocket, { WebSocketServer } from 'ws';
+import type { SignalingMessage, Member } from './types';
 
 export interface ClientInfo {
   id: string;
@@ -222,4 +224,26 @@ export class SignalingServer {
   isRunning(): boolean {
     return this.server !== null;
   }
+}
+
+// Run as standalone server
+if (require.main === module) {
+  const port = parseInt(process.argv[2] || '8888', 10);
+  const server = new SignalingServer(port);
+  
+  server.start(() => {
+    console.log('[SignalingServer] Client list updated');
+  }).then(() => {
+    console.log(`[SignalingServer] Ready on port ${port}`);
+    console.log('Press Ctrl+C to stop');
+  }).catch((err) => {
+    console.error('[SignalingServer] Failed to start:', err);
+    process.exit(1);
+  });
+
+  process.on('SIGINT', async () => {
+    console.log('\n[SignalingServer] Shutting down...');
+    await server.stop();
+    process.exit(0);
+  });
 }

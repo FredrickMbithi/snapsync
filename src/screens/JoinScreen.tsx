@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,12 +28,22 @@ type Props = {
 
 export default function JoinScreen({ navigation }: Props) {
   const [roomCode, setRoomCode] = useState('');
-  const [userName, setUserName] = useState(getUserName() || '');
+  const [userName, setUserName] = useState('');
   const [hostIP, setHostIP] = useState(''); // Will come from QR scan or manual entry
   const [isJoining, setIsJoining] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   
   const setCurrentRoom = useAppStore((state) => state.setCurrentRoom);
+  
+  // Load saved username after mount (avoids native module timing issues)
+  useEffect(() => {
+    try {
+      const savedName = getUserName();
+      if (savedName) setUserName(savedName);
+    } catch (e) {
+      console.warn('Failed to load saved username:', e);
+    }
+  }, []);
   const addMember = useAppStore((state) => state.addMember);
   const setConnectionStatus = useAppStore((state) => state.setConnectionStatus);
 
