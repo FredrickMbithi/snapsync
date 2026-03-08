@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "SnapSync",
+    "slug": "snapsync",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.snapsync.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "SnapSync needs camera access to scan QR codes and capture photos.",
+        "NSPhotoLibraryUsageDescription": "SnapSync needs photo library access to upload and save photos.",
+        "NSPhotoLibraryAddUsageDescription": "SnapSync needs permission to save photos to your camera roll.",
+        "NSMicrophoneUsageDescription": "SnapSync uses WebRTC for peer-to-peer communication.",
+        "NSLocalNetworkUsageDescription": "SnapSync uses local network to discover nearby rooms and share photos.",
+        "NSBonjourServices": [
+          "_snapsync._tcp",
+          "_snapsync._tcp.local."
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.snapsync.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE",
+        "CHANGE_WIFI_MULTICAST_STATE",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SnapSync to access your camera to scan QR codes and take photos.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "snapsync-p2p-photos"
+      }
+    }
+  }
+}
