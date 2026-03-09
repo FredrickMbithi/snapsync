@@ -9,25 +9,34 @@
 ```
 snapsync/
 ├── src/
-│   ├── screens/          # All 4 main screens implemented
-│   │   ├── LandingScreen.tsx     ✅ Create/Join buttons
-│   │   ├── CreateRoomScreen.tsx  ✅ Room name + user name form
-│   │   ├── JoinScreen.tsx        ✅ QR scan + manual code entry
-│   │   └── RoomScreen.tsx        ✅ Photo grid + members + FAB
+│   ├── screens/          # All 4 main screens (REDESIGNED)
+│   │   ├── LandingScreen.tsx     ✅ Dark theme, SNAP/SYNC hero
+│   │   ├── CreateRoomScreen.tsx  ✅ Dark form, gold CTA
+│   │   ├── JoinScreen.tsx        ✅ QR scan + manual code
+│   │   └── RoomScreen.tsx        ✅ Stats bar, upload strip
+│   ├── components/
+│   │   ├── QRScanner.tsx         ✅ CameraView + gold corners
+│   │   └── QRCodeView.tsx        ✅ SVG QR generation
 │   ├── navigation/
 │   │   └── AppNavigator.tsx      ✅ React Navigation stack
 │   ├── store/
 │   │   └── appStore.ts           ✅ Zustand state management
 │   ├── storage/
-│   │   └── mmkvStore.ts          ✅ MMKV persistence layer
+│   │   └── mmkvStore.ts          ✅ MMKV (lazy init)
+│   ├── networking/
+│   │   ├── signalingServer.ts    ✅ Code ready (Node.js)
+│   │   ├── signalingClient.ts    ✅ Code ready (disabled)
+│   │   └── signalingManager.ts   ✅ Coordinator
 │   ├── types/
 │   │   └── models.ts             ✅ TypeScript interfaces
 │   └── utils/
+│       ├── theme.ts              ✅ Colors, spacing, typography
 │       ├── roomCode.ts           ✅ Code generation, QR parsing
-│       └── colors.ts             ✅ Member color generation
+│       ├── colors.ts             ✅ Member color generation
+│       └── network.ts            ✅ IP detection
 ├── App.tsx                       ✅ Entry point
 ├── app.json                      ✅ Expo config with permissions
-├── package.json                  ✅ Base dependencies
+├── package.json                  ✅ All dependencies
 └── README.md                     ✅ Documentation
 ```
 
@@ -101,93 +110,92 @@ All core data models defined:
 
 **Room Screen**:
 
-- Header: room name + code + leave button
-- Members row: colored avatar circles with count
+- Header: room name + code pill + QR button + leave
+- Stats bar: people count, photo count, LIVE indicator
+- Members row: colored avatar circles with host badge
 - Photo grid: 3 columns, square items, member badge overlay
-- Empty state: "No photos yet. Tap + to add some!"
-- FAB: + button for photo upload (placeholder)
-
-#### 6. Configuration ✅
-
-**app.json**:
-
-- iOS permissions: Camera, Photos, Microphone, Local Network, Bonjour
-- Android permissions: Camera, Storage, Network, WiFi
-- Config plugins array ready for WebRTC + expo-camera
-- Bundle IDs: `com.snapsync.app`
-
-**package.json**:
-
-- Base: Expo 55, React Native 0.83, React 19.2
-- Navigation: React Navigation v7 (native + native-stack)
-- State: Zustand v5
-- TypeScript with strict type checking
-
-#### 7. Navigation Flow ✅
-
-```
-Landing → CreateRoom → Room
-        → Join → Room
-```
-
-- Type-safe navigation with `RootStackParamList`
-- No back button on Room screen (must use Leave button)
-- Proper screen transitions
+- Empty state: "No photos yet" with camera icon
+- Upload strip: Gold "+ Upload Photos" button
 
 ---
 
-## 🚧 Next Phase: Networking Layer
+## ✅ Phase 2 COMPLETE: UI & QR Code
 
-### Phase 2A: WebSocket Signaling (Priority 1)
+### What's Been Built
 
-Create `src/networking/signalingServer.ts`:
+#### 1. Design System (theme.ts) ✅
 
-- Host starts WebSocket server on port 8888 using `ws` library
-- Message types: peer-list, member-join, member-leave, offer, answer, ice-candidate
-- Broadcast member list to all connected clients
-- Route messages between specific peers for WebRTC handshake
-
-Create `src/networking/signalingClient.ts`:
-
-- Guest connects to `ws://hostIP:8888`
-- Send member-join with name and device ID
-- Listen for peer updates
-- Handle reconnection with exponential backoff
-
-### Phase 2B: mDNS Discovery (Priority 2)
-
-**Dependencies to add**:
-
-```json
-"react-native-zeroconf": "^0.13.0"
+```typescript
+colors: {
+  bg: '#0e0c0a',        // Near black background
+  surface1: '#161410',  // Card backgrounds
+  surface2: '#1e1b17',  // Input backgrounds
+  surface3: '#28251f',  // Elevated surfaces
+  gold: '#f0b429',      // Primary accent
+  text: '#f4efe8',      // Primary text
+  text2: '#9a9186',     // Secondary text
+  text3: '#5a5448',     // Muted text
+  // ... more colors
+}
 ```
 
-Create `src/networking/discovery.ts`:
+#### 2. Screen Redesigns ✅
 
-- Publisher: Host advertises `_snapsync._tcp.local.` with code, room name, port
-- Scanner: Guests discover nearby rooms with retry logic (5 attempts, 500ms delays)
-- Use DNSSD mode for Android reliability
-- Display discovered rooms on Landing screen
+**LandingScreen**:
 
-### Phase 2C: QR Code (Priority 1)
+- SNAP/SYNC hero with gold accent
+- "Nearby Events" section with JOIN pills
+- Two gold CTA buttons: Host / Join
+- "No internet required" footer
 
-**Dependencies to add**:
+**CreateRoomScreen**:
 
-```json
-"react-native-qrcode-svg": "^6.3.11",
-"react-native-svg": "~15.5.0",
-"expo-camera": "~16.0.0"
-```
+- Dark topbar with back button
+- EVENT NAME, YOUR NAME, EVENT DATE fields
+- Tip box explaining how it works
+- Gold "Generate Room →" button
 
-Implement:
+**JoinScreen**:
 
-- Generate QR code on CreateRoomScreen → show after room created
-- Scan QR code on JoinScreen → parse and connect
-- Fallback to manual code entry if scan fails
+- QR scan button with camera icon
+- "OR ENTER MANUALLY" divider
+- Large monospace room code input
+- Tip box about scanning QR
+
+**RoomScreen**:
+
+- Header with code pill and QR button
+- Stats bar (people/photos/LIVE)
+- Member avatars with host badge
+- Upload strip at bottom
+- Dark QR modal with gold accents
+
+#### 3. QR Components ✅
+
+**QRScanner.tsx**:
+
+- Uses expo-camera CameraView
+- Gold corner markers
+- Dark semi-transparent overlay
+- Permission request screen
+- Scanned success animation
+
+**QRCodeView.tsx**:
+
+- Uses react-native-qrcode-svg
+- Generates snapsync:// URLs
+- Displays room code and IP
+
+#### 4. Signaling Code (Disabled for UI testing) ✅
+
+- signalingServer.ts: WebSocket server (requires Node.js)
+- signalingClient.ts: WebSocket client
+- signalingManager.ts: Coordinator singleton
+- Message types: peer-list, member-join, offer, answer, ice-candidate
 
 ---
 
-## 🔮 Phase 3: WebRTC Mesh (Days 4-5)
+## 🚧 Next Phase: P2P Networking
 
 **Dependencies to add**:
 

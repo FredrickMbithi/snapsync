@@ -1,33 +1,118 @@
 # Next Steps - Exact Commands
 
-## Phase 2A: Install Additional Dependencies
+## Current State (March 9, 2026)
+
+**Phase 1 & 2 Complete:**
+
+- Dark theme with gold accents ✅
+- All 4 screens redesigned ✅
+- QR code generation working ✅
+- QR code scanning working (CameraView) ✅
+- Signaling code ready (disabled for UI testing) ✅
+
+## Phase 3A: Enable P2P Networking
+
+### 1. Run Signaling Server Separately
+
+The signaling server cannot run inside React Native (ws requires Node.js).
+Run it as a separate Node.js process:
+
+```bash
+cd /home/ghost/Dev/P-room/snapsync/server
+
+# Install server dependencies
+npm install
+
+# Start the signaling server
+node signalingServer.js
+```
+
+### 2. Re-enable WebSocket Client
+
+Edit `src/screens/JoinScreen.tsx` - uncomment signaling code:
+
+```typescript
+// Re-enable the SignalingManager.getClient() call
+```
+
+Edit `src/screens/CreateRoomScreen.tsx` - add server IP requirement.
+
+### 3. Test Two-Device Connection
+
+1. Device A: Start signaling server on laptop
+2. Device A: Create room, note server IP
+3. Device B: Scan QR code
+4. Verify both devices show in members list
+
+## Phase 3B: Add WebRTC
 
 ```bash
 cd /home/ghost/Dev/P-room/snapsync
 
-# Install WebSocket library
-yarn add ws
-yarn add -D @types/ws
+# Install WebRTC
+yarn add react-native-webrtc
+yarn add -D @config-plugins/react-native-webrtc
 
-# Install QR Code generation
-yarn add react-native-qrcode-svg react-native-svg
-
-# Install Expo camera and dev client
-npx expo install expo-camera expo-dev-client
-
-# Install mDNS discovery (optional - can skip if network issues persist)
-yarn add react-native-zeroconf
-
-# Install WebRTC (Phase 3 - save for later)
-# yarn add react-native-webrtc
-# yarn add -D @config-plugins/react-native-webrtc
-
-# Install MMKV storage
-yarn add react-native-mmkv
-
-# Install React Native dependencies for navigation
-npx expo install react-native-screens react-native-safe-area-context
+# Update app.json plugins
+# Rebuild native app
+npx expo run:android
 ```
+
+Create `src/networking/peerConnection.ts`:
+
+- RTCPeerConnection factory
+- Offer/answer exchange via signaling
+- ICE candidate handling
+- DataChannel setup
+
+## Phase 4: Photo Transfer
+
+```bash
+# Install photo dependencies
+npx expo install expo-image-picker expo-image-manipulator expo-file-system expo-media-library
+```
+
+Implement:
+
+- Photo picker integration
+- Image compression (< 1MB)
+- Chunked transfer over DataChannel
+- Progress tracking UI
+- Save to camera roll
+
+## Quick Test Commands
+
+```bash
+# Start Metro bundler
+cd /home/ghost/Dev/P-room/snapsync && npx expo start
+
+# Build and run on Android
+npx expo run:android
+
+# Check connected devices
+adb devices
+
+# View logs
+adb logcat | grep -E "(SnapSync|ReactNative)"
+
+# Restart Metro with cache clear
+npx expo start --clear
+```
+
+---
+
+## Completed Dependencies
+
+Already installed:
+
+- ✅ expo ~55.0.5
+- ✅ react-native 0.83.2
+- ✅ @react-navigation/\* ^7.x
+- ✅ zustand ^5.0.2
+- ✅ react-native-mmkv
+- ✅ expo-camera
+- ✅ react-native-qrcode-svg
+- ✅ react-native-svg
 
 ## Phase 2B: Create WebSocket Signaling Server
 

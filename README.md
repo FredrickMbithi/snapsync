@@ -6,7 +6,7 @@ Local network photo sharing app for events and gatherings. No internet required.
 
 - 📱 Create/Join rooms via QR code
 - 🔄 Peer-to-peer photo sharing using WebRTC
-- 🔍 Auto-discovery via mDNS (zeroconf)
+- 🎨 Dark theme with gold accents
 - 💾 Save photos to camera roll
 - 🔒 100% local - no cloud, no servers
 
@@ -67,19 +67,24 @@ Scan the QR code with your development build.
 ```
 snapsync/
 ├── src/
-│   ├── screens/          # UI screens
-│   │   ├── LandingScreen.tsx
-│   │   ├── ### CreateRoomScreen.tsx
-│   │   ├── JoinScreen.tsx
-│   │   └── RoomScreen.tsx
+│   ├── screens/          # UI screens (dark theme)
+│   │   ├── LandingScreen.tsx    # SNAP/SYNC hero, nearby events
+│   │   ├── CreateRoomScreen.tsx # Host event form
+│   │   ├── JoinScreen.tsx       # QR scan + manual code
+│   │   └── RoomScreen.tsx       # Photo grid, stats, members
+│   ├── components/       # Reusable UI
+│   │   ├── QRScanner.tsx        # Camera-based QR scanner
+│   │   └── QRCodeView.tsx       # QR code display
 │   ├── navigation/       # React Navigation
 │   ├── store/           # Zustand state management
 │   ├── storage/         # MMKV persistent storage
-│   ├── networking/      # WebRTC, WebSocket, mDNS
-│   ├── features/        # Photo upload/download logic
-│   ├── utils/           # Helpers (room codes, colors)
-│   ├── types/           # TypeScript definitions
-│   └── components/      # Reusable UI components
+│   ├── networking/      # WebSocket signaling (P2P ready)
+│   ├── utils/           # Helpers + theme
+│   │   ├── theme.ts            # Colors, spacing, typography
+│   │   ├── roomCode.ts         # Code generation, QR parsing
+│   │   ├── colors.ts           # Member avatar colors
+│   │   └── network.ts          # IP detection
+│   └── types/           # TypeScript definitions
 ├── App.tsx
 └── package.json
 ```
@@ -94,12 +99,19 @@ snapsync/
 - [x] TypeScript types defined
 - [x] State management setup (Zustand + MMKV)
 
-### 🚧 Phase 2: Networking (IN PROGRESS)
+### ✅ Phase 2: UI & QR (COMPLETE)
 
-- [ ] WebSocket signaling server (host device)
-- [ ] WebSocket signaling client (guest devices)
-- [ ] mDNS room discovery
-- [ ] QR code generation and scanning
+- [x] Dark theme with gold accents
+- [x] Visual redesign (all screens)
+- [x] QR code generation (react-native-qrcode-svg)
+- [x] QR code scanning (expo-camera CameraView)
+- [x] WebSocket signaling code (disabled for UI testing)
+
+### 🚧 Phase 3: P2P Networking (NEXT)
+
+- [ ] Enable WebSocket signaling
+- [ ] WebRTC peer connections
+- [ ] Mesh network coordinator
 
 ### ⏳ Phase 3: WebRTC P2P
 
@@ -182,4 +194,4 @@ MIT
 
 ---
 
-**Current Status**: Foundation complete (screens, navigation, state). Next: WebSocket signaling + mDNS discovery.
+**Current Status**: UI complete with dark theme. QR generation/scanning works. Next: Enable P2P networking.
