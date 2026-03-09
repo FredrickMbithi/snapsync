@@ -1,9 +1,13 @@
 /**
- * WebSocket Signaling Client
- * Used by guest devices to connect to host's signaling server
+ * TCP Signaling Client
+ * Used by guest devices to connect to host's TCP signaling server
+ * Uses react-native-tcp-socket instead of WebSocket for React Native compatibility
  */
 
+import TcpSocket from 'react-native-tcp-socket';
+import type { Socket } from 'react-native-tcp-socket/lib/types/Socket';
 import type { SignalingMessage, Member } from '../types/models';
+import { encodeMessage, createMessageParser } from './tcpFraming';
 
 export type SignalingClientEvents = {
   onConnect: () => void;
@@ -18,17 +22,22 @@ export type SignalingClientEvents = {
 };
 
 export class SignalingClient {
-  private socket: WebSocket | null = null;
-  private url: string;
+  private socket: Socket | null = null;
+  private host: string;
+  private port: number;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private shouldReconnect = true;
   private events: Partial<SignalingClientEvents> = {};
+  private parser: ReturnType<typeof createMessageParser> | null = null;
+  private pendingMember: Member | null = null;
+  private connected = false;
 
   constructor(host: string, port: number = 8888) {
-    this.url = `ws://${host}:${port}`;
+    this.host = host;
+    this.port = port;
   }
 
   /**
@@ -37,47 +46,60 @@ export class SignalingClient {
   connect(member: Member): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        console.log(`[SignalingClient] Connecting to ${this.url}`);
-        this.socket = new WebSocket(this.url);
+        console.log(`[SignalingClient] Connecting to ${this.host}:${this.port}`);
+        this.pendingMember = member;
 
-        this.socket.onopen = () => {
-          console.log('[SignalingClient] Connected');
-          this.reconnectAttempts = 0;
-          this.events.onConnect?.();
-          
-          // Send member-join message
-          this.send({
-            type: 'member-join',
-            member,
-          });
-          
-          resolve();
-        };
-
-        this.socket.onmessage = (event) => {
-          try {
-            const message: SignalingMessage = JSON.parse(event.data);
-            this.handleMessage(message);
-          } catch (error) {
-            console.error('[SignalingClient] Failed to parse message:', error);
+        // Create message parser
+        this.parser = createMessageParser(
+          (message) => this.handleMessage(message),
+          (error) => {
+            console.error('[SignalingClient] Parse error:', error);
+            this.events.onError?.(error);
           }
-        };
+        );
 
-        this.socket.onerror = (error) => {
+        // Create TCP connection
+        this.socket = TcpSocket.createConnection(
+          { host: this.host, port: this.port },
+          () => {
+            console.log('[SignalingClient] Connected');
+            this.connected = true;
+            this.reconnectAttempts = 0;
+            this.events.onConnect?.();
+
+            // Send member-join message
+            this.send({
+              type: 'member-join',
+              member,
+            });
+
+            resolve();
+          }
+        );
+
+        this.socket.on('data', (data) => {
+          this.parser?.feed(Buffer.from(data));
+        });
+
+        this.socket.on('error', (error) => {
           console.error('[SignalingClient] Socket error:', error);
-          this.events.onError?.(new Error('WebSocket error'));
-          reject(error);
-        };
-
-        this.socket.onclose = () => {
-          console.log('[SignalingClient] Disconnected');
-          this.socket = null;
-          this.events.onDisconnect?.();
-          
-          if (this.shouldReconnect) {
-            this.attemptReconnect(member);
+          this.events.onError?.(new Error(`TCP socket error: ${error.message}`));
+          if (!this.connected) {
+            reject(error);
           }
-        };
+        });
+
+        this.socket.on('close', () => {
+          console.log('[SignalingClient] Disconnected');
+          this.connected = false;
+          this.socket = null;
+          this.parser?.reset();
+          this.events.onDisconnect?.();
+
+          if (this.shouldReconnect && this.pendingMember) {
+            this.attemptReconnect(this.pendingMember);
+          }
+        });
       } catch (error) {
         reject(error);
       }
@@ -159,11 +181,16 @@ export class SignalingClient {
   /**
    * Send message to server
    */
-  private send(message: any): void {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(message));
+  private send(message: SignalingMessage): void {
+    if (this.socket && this.connected) {
+      try {
+        const encoded = encodeMessage(message);
+        this.socket.write(encoded);
+      } catch (error) {
+        console.error('[SignalingClient] Failed to send:', error);
+      }
     } else {
-      console.warn('[SignalingClient] Cannot send - socket not open');
+      console.warn('[SignalingClient] Cannot send - socket not connected');
     }
   }
 
@@ -202,7 +229,7 @@ export class SignalingClient {
    * Check if connected
    */
   isConnected(): boolean {
-    return this.socket?.readyState === WebSocket.OPEN;
+    return this.connected;
   }
 
   /**
@@ -210,15 +237,23 @@ export class SignalingClient {
    */
   disconnect(): void {
     this.shouldReconnect = false;
-    
+    this.pendingMember = null;
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
 
     if (this.socket) {
-      this.socket.close();
+      try {
+        this.socket.destroy();
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
       this.socket = null;
     }
+
+    this.connected = false;
+    this.parser?.reset();
   }
 }

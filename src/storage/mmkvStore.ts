@@ -3,20 +3,53 @@
  * Used for device ID, recent rooms, and user preferences
  */
 
-import { MMKV } from 'react-native-mmkv';
+// MMKV is a native module; in Expo Go / dev clients it might be unavailable.
+// We fall back to an in-memory store to keep the app running.
+let MMKVClass: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  MMKVClass = require('react-native-mmkv').MMKV;
+} catch (e) {
+  console.warn('[MMKV] Native module not available, using in-memory storage');
+}
+
 import { generateDeviceId } from '../utils/roomCode';
 import { Room } from '../types/models';
 
 // Lazy initialization for MMKV to avoid EventEmitter errors
-let _storage: MMKV | null = null;
+let _storage: any | null = null;
 
-function getStorage(): MMKV {
-  if (!_storage) {
-    _storage = new MMKV({
+// Lightweight memory store used when MMKV is unavailable (Expo Go, web, etc.)
+const memoryStore = new Map<string, string | number | boolean>();
+
+function getStorage(): any {
+  if (_storage) return _storage;
+
+  if (MMKVClass) {
+    _storage = new MMKVClass({
       id: 'snapsync-storage',
       encryptionKey: 'snapsync-encryption-key-2026',
     });
+    return _storage;
   }
+
+  // Fallback: mimic the MMKV API with Map
+  _storage = {
+    getString: (key: string) => {
+      const v = memoryStore.get(key);
+      return typeof v === 'string' ? v : undefined;
+    },
+    set: (key: string, value: string | number | boolean) => {
+      memoryStore.set(key, value);
+    },
+    delete: (key: string) => {
+      memoryStore.delete(key);
+    },
+    clearAll: () => {
+      memoryStore.clear();
+    },
+  };
+
   return _storage;
 }
 

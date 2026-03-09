@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
-import { colors, borderRadius, spacing } from '../utils/theme';
+import { colors, borderRadius, spacing, shadows } from '../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Landing'>;
@@ -26,20 +26,36 @@ export default function LandingScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+      <View style={styles.background} pointerEvents="none">
+        <View style={styles.glowOne} />
+        <View style={styles.glowTwo} />
+        <View style={styles.glowRing} />
+      </View>
       
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Hero Section */}
-        <View style={styles.hero}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>📡 OFFLINE · PEER TO PEER</Text>
+        <View style={styles.heroCard}>
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>📡 OFFLINE · PEER TO PEER</Text>
+            </View>
+            <Text style={styles.badgeRight}>No accounts</Text>
           </View>
-          
-          <Text style={styles.title}>SNAP</Text>
-          <Text style={styles.titleGold}>SYNC</Text>
+
+          <View style={styles.titleStack}>
+            <Text style={styles.title}>SNAP</Text>
+            <Text style={styles.titleGold}>SYNC</Text>
+          </View>
           
           <Text style={styles.subtitle}>
             One room. Everyone's camera.{'\n'}Pick what you want.
           </Text>
+
+          <View style={styles.pillRow}>
+            <View style={styles.pill}><Text style={styles.pillText}>Offline-first</Text></View>
+            <View style={styles.pill}><Text style={styles.pillText}>Local Wi-Fi only</Text></View>
+            <View style={styles.pill}><Text style={styles.pillText}>QR or code</Text></View>
+          </View>
         </View>
 
         {/* Nearby Events Section */}
@@ -63,10 +79,19 @@ export default function LandingScreen({ navigation }: Props) {
                 <Text style={styles.nearbyEmoji}>{event.emoji}</Text>
               </View>
               <View style={styles.nearbyInfo}>
-                <Text style={styles.nearbyTitle}>{event.name}</Text>
+                <View style={styles.nearbyTopRow}>
+                  <Text style={styles.nearbyTitle}>{event.name}</Text>
+                  <View style={styles.codeTag}>
+                    <Text style={styles.codeTagText}>{event.code}</Text>
+                  </View>
+                </View>
                 <Text style={styles.nearbyMeta}>
-                  {event.people} people · {event.photos} photos · by {event.host}
+                  {event.people} people · {event.photos} photos · host {event.host}
                 </Text>
+                <View style={styles.nearbyMetrics}>
+                  <View style={styles.metricChip}><Text style={styles.metricText}>Fast Wi-Fi</Text></View>
+                  <View style={styles.metricChip}><Text style={styles.metricText}>Live feed</Text></View>
+                </View>
               </View>
               <View style={styles.joinPill}>
                 <Text style={styles.joinPillText}>JOIN</Text>
@@ -78,6 +103,7 @@ export default function LandingScreen({ navigation }: Props) {
 
       {/* Bottom CTAs */}
       <View style={styles.ctaContainer}>
+        <Text style={styles.ctaLabel}>Host in under 10 seconds</Text>
         <TouchableOpacity
           style={styles.btnGold}
           onPress={() => navigation.navigate('CreateRoom')}
@@ -103,6 +129,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  background: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  glowOne: {
+    position: 'absolute',
+    top: -120,
+    left: -80,
+    width: 260,
+    height: 260,
+    borderRadius: 180,
+    backgroundColor: colors.goldGlow,
+    opacity: 0.55,
+    transform: [{ rotate: '-6deg' }],
+  },
+  glowTwo: {
+    position: 'absolute',
+    bottom: -60,
+    right: -40,
+    width: 220,
+    height: 220,
+    borderRadius: 170,
+    backgroundColor: colors.surface3,
+    opacity: 0.35,
+  },
+  glowRing: {
+    position: 'absolute',
+    top: 220,
+    right: 26,
+    width: 140,
+    height: 140,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: colors.borderGlow,
+    opacity: 0.6,
+    transform: [{ rotate: '18deg' }],
+  },
   scrollView: {
     flex: 1,
   },
@@ -112,25 +174,44 @@ const styles = StyleSheet.create({
   },
   
   // Hero
-  hero: {
+  heroCard: {
     paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.xl,
+    backgroundColor: colors.surfaceGlass,
+    borderWidth: 1,
+    borderColor: colors.border2,
+    overflow: 'hidden',
+    ...shadows.soft,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   badge: {
     backgroundColor: colors.goldFade,
     borderWidth: 1,
-    borderColor: 'rgba(240,180,41,0.3)',
+    borderColor: colors.borderGlow,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: borderRadius.sm,
-    marginBottom: spacing.lg,
   },
   badgeText: {
     color: colors.gold,
     fontSize: 10,
     fontWeight: '500',
     letterSpacing: 1.5,
+  },
+  badgeRight: {
+    color: colors.text3,
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
+  titleStack: {
+    alignItems: 'center',
   },
   title: {
     fontSize: 72,
@@ -154,10 +235,30 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginTop: spacing.md,
   },
+  pillRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: spacing.lg,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  pillText: {
+    color: colors.text2,
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
   
   // Nearby Section
   nearbySection: {
-    marginTop: spacing.md,
+    marginTop: spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -189,14 +290,15 @@ const styles = StyleSheet.create({
     color: colors.green,
   },
   nearbyCard: {
-    backgroundColor: colors.surface2,
-    borderWidth: 1,
+    backgroundColor: colors.surface1,
+    borderWidth: 1.5,
     borderColor: colors.border2,
     borderRadius: borderRadius.lg,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+    ...shadows.soft,
   },
   nearbyThumb: {
     width: 48,
@@ -213,15 +315,53 @@ const styles = StyleSheet.create({
   nearbyInfo: {
     flex: 1,
   },
+  nearbyTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
   nearbyTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 2,
   },
+  codeTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface3,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  codeTagText: {
+    color: colors.gold,
+    fontWeight: '700',
+    letterSpacing: 1,
+    fontSize: 12,
+  },
   nearbyMeta: {
     fontSize: 12,
     color: colors.text2,
+  },
+  nearbyMetrics: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  metricChip: {
+    backgroundColor: colors.surface2,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  metricText: {
+    color: colors.text3,
+    fontSize: 11,
+    letterSpacing: 0.3,
   },
   joinPill: {
     backgroundColor: 'rgba(46,213,115,0.12)',
@@ -245,11 +385,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
     gap: 12,
   },
+  ctaLabel: {
+    color: colors.text3,
+    fontSize: 12,
+    letterSpacing: 0.4,
+  },
   btnGold: {
     backgroundColor: colors.gold,
     paddingVertical: 16,
     borderRadius: borderRadius.md,
     alignItems: 'center',
+    ...shadows.glow,
   },
   btnGoldText: {
     color: colors.bg,

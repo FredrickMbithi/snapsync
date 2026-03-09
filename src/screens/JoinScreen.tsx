@@ -22,7 +22,7 @@ import { generateMemberColor } from '../utils/colors';
 import { saveUserName, getUserName } from '../storage/mmkvStore';
 import SignalingManager from '../networking/signalingManager';
 import QRScanner from '../components/QRScanner';
-import { colors, borderRadius, spacing } from '../utils/theme';
+import { colors, borderRadius, spacing, shadows } from '../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Join'>;
@@ -118,7 +118,7 @@ export default function JoinScreen({ navigation }: Props) {
         console.log('[JoinScreen] Successfully joined room');
         
       } catch (error) {
-        console.error('[JoinScreen] Failed to connect to signaling server:', error);
+        console.warn('[JoinScreen] Failed to connect to signaling server:', error);
         Alert.alert(
           'Connection Failed',
           'Could not connect to room. Please check the host IP and try again.',
@@ -131,7 +131,7 @@ export default function JoinScreen({ navigation }: Props) {
       
       navigation.replace('Room');
     } catch (error) {
-      console.error('Error joining room:', error);
+      console.warn('Error joining room:', error);
       Alert.alert('Error', 'Could not join room. Please try again.');
       setConnectionStatus('disconnected');
     } finally {
@@ -166,6 +166,11 @@ export default function JoinScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
       
+      <View style={styles.background} pointerEvents="none">
+        <View style={styles.glowTop} />
+        <View style={styles.glowBottom} />
+      </View>
+      
       {/* Topbar */}
       <View style={styles.topbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -180,69 +185,76 @@ export default function JoinScreen({ navigation }: Props) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView style={styles.formBody} contentContainerStyle={styles.formContent}>
-          {/* Scan QR Button */}
-          <TouchableOpacity
-            style={styles.scanBtn}
-            onPress={handleQRScan}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.scanBtnIcon}>📷</Text>
-            <Text style={styles.scanBtnText}>Scan QR Code</Text>
-          </TouchableOpacity>
-          
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR ENTER MANUALLY</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          
-          {/* Room Code */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>ROOM CODE</Text>
-            <TextInput
-              style={[styles.fieldInput, styles.codeInput]}
-              placeholder="KP73"
-              placeholderTextColor={colors.text3}
-              value={roomCode}
-              onChangeText={(text) => setRoomCode(text.toUpperCase())}
-              autoCapitalize="characters"
-              maxLength={4}
-            />
-          </View>
-          
-          {/* Host IP */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>HOST IP ADDRESS</Text>
-            <TextInput
-              style={styles.fieldInput}
-              placeholder="192.168.1.100"
-              placeholderTextColor={colors.text3}
-              value={hostIP}
-              onChangeText={setHostIP}
-              keyboardType="decimal-pad"
-              autoCapitalize="none"
-            />
-          </View>
-          
-          {/* Your Name */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>YOUR NAME</Text>
-            <TextInput
-              style={styles.fieldInput}
-              placeholder="Your name"
-              placeholderTextColor={colors.text3}
-              value={userName}
-              onChangeText={setUserName}
-            />
-          </View>
-          
-          {/* Tip Box */}
-          <View style={styles.tipBox}>
-            <Text style={styles.tipText}>
-              <Text style={styles.tipBold}>Tip: </Text>
-              Ask the host to show their QR code for quick joining. Make sure you're connected to the same WiFi network.
-            </Text>
+          <View style={styles.formCard}>
+            <Text style={styles.sectionTitle}>Jump into the room</Text>
+            
+            {/* Scan QR Button */}
+            <TouchableOpacity
+              style={styles.scanBtn}
+              onPress={handleQRScan}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.scanBtnIcon}>📷</Text>
+              <View>
+                <Text style={styles.scanBtnText}>Scan QR Code</Text>
+                <Text style={styles.scanBtnHint}>Fastest way to join nearby rooms</Text>
+              </View>
+            </TouchableOpacity>
+            
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR ENTER MANUALLY</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            
+            {/* Room Code */}
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>ROOM CODE</Text>
+              <TextInput
+                style={[styles.fieldInput, styles.codeInput]}
+                placeholder="KP73"
+                placeholderTextColor={colors.text3}
+                value={roomCode}
+                onChangeText={(text) => setRoomCode(text.toUpperCase())}
+                autoCapitalize="characters"
+                maxLength={4}
+              />
+            </View>
+            
+            {/* Host IP */}
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>HOST IP ADDRESS</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="192.168.1.100"
+                placeholderTextColor={colors.text3}
+                value={hostIP}
+                onChangeText={setHostIP}
+                keyboardType="decimal-pad"
+                autoCapitalize="none"
+              />
+            </View>
+            
+            {/* Your Name */}
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>YOUR NAME</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="Your name"
+                placeholderTextColor={colors.text3}
+                value={userName}
+                onChangeText={setUserName}
+              />
+            </View>
+            
+            {/* Tip Box */}
+            <View style={styles.tipBox}>
+              <Text style={styles.tipText}>
+                <Text style={styles.tipBold}>Tip: </Text>
+                Ask the host to show their QR code for quick joining. Make sure you're connected to the same WiFi network.
+              </Text>
+            </View>
           </View>
         </ScrollView>
         
@@ -286,6 +298,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  background: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  glowTop: {
+    position: 'absolute',
+    top: -80,
+    right: -40,
+    width: 220,
+    height: 220,
+    borderRadius: 160,
+    backgroundColor: colors.goldGlow,
+    opacity: 0.35,
+  },
+  glowBottom: {
+    position: 'absolute',
+    bottom: -120,
+    left: -40,
+    width: 260,
+    height: 260,
+    borderRadius: 180,
+    backgroundColor: colors.surface3,
+    opacity: 0.25,
+  },
   
   // Topbar
   topbar: {
@@ -326,18 +361,34 @@ const styles = StyleSheet.create({
   formContent: {
     padding: spacing.lg,
   },
+  formCard: {
+    backgroundColor: colors.surfaceGlass,
+    borderWidth: 1,
+    borderColor: colors.border2,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    gap: spacing.md,
+    ...shadows.soft,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
   
   // Scan Button
   scanBtn: {
     backgroundColor: colors.surface2,
-    borderWidth: 2,
-    borderColor: colors.gold,
-    borderRadius: borderRadius.md,
-    paddingVertical: 20,
+    borderWidth: 1.5,
+    borderColor: colors.borderGlow,
+    borderRadius: borderRadius.lg,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    gap: 12,
+    ...shadows.soft,
   },
   scanBtnIcon: {
     fontSize: 22,
@@ -346,6 +397,11 @@ const styles = StyleSheet.create({
     color: colors.gold,
     fontSize: 16,
     fontWeight: '600',
+  },
+  scanBtnHint: {
+    color: colors.text3,
+    fontSize: 12,
+    marginTop: 2,
   },
   
   // Divider
@@ -379,9 +435,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   fieldInput: {
-    backgroundColor: colors.surface2,
+    backgroundColor: colors.surfaceGlass,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: colors.border2,
     borderRadius: borderRadius.md,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -398,12 +454,13 @@ const styles = StyleSheet.create({
   
   // Tip Box
   tipBox: {
-    backgroundColor: colors.surface2,
+    backgroundColor: colors.surface1,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     padding: 14,
     marginTop: spacing.sm,
+    ...shadows.soft,
   },
   tipText: {
     fontSize: 13,
@@ -425,6 +482,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: borderRadius.md,
     alignItems: 'center',
+    ...shadows.glow,
   },
   btnDisabled: {
     opacity: 0.5,

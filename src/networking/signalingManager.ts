@@ -1,30 +1,48 @@
 /**
  * Signaling Manager
- * Manages the WebSocket signaling client for React Native
- * Note: The signaling server must run separately as a Node.js process
+ * Manages TCP signaling server and client for React Native
+ * 
+ * Host: Runs TcpSignalingServer in-app
+ * Guest: Connects via SignalingClient (TCP)
  */
 
 import { SignalingClient } from './signalingClient';
+import { tcpSignalingServer } from './tcpSignalingServer';
 
 class SignalingManager {
   private static clientInstance: SignalingClient | null = null;
 
   /**
-   * Note: Server cannot run in React Native (ws package requires Node.js)
-   * Run the server separately: node server/signalingServer.js
+   * Start TCP signaling server (for host)
+   * @param port Optional port (0 for auto-assign)
+   * @returns Promise resolving to actual port
    */
-  static getServer(_port: number = 8888): never {
-    throw new Error(
-      'SignalingServer cannot run in React Native. ' +
-      'Run the server separately as a Node.js process: node server/signalingServer.js'
-    );
+  static async startServer(port: number = 0): Promise<number> {
+    if (tcpSignalingServer.isRunning()) {
+      console.log('[SignalingManager] Server already running');
+      return tcpSignalingServer.getPort();
+    }
+    
+    const actualPort = await tcpSignalingServer.start(port);
+    console.log(`[SignalingManager] Server started on port ${actualPort}`);
+    return actualPort;
   }
 
   /**
-   * Server cannot run in React Native
+   * Stop TCP signaling server
    */
   static async stopServer(): Promise<void> {
-    console.warn('SignalingServer is not running in React Native');
+    if (tcpSignalingServer.isRunning()) {
+      await tcpSignalingServer.stop();
+      console.log('[SignalingManager] Server stopped');
+    }
+  }
+
+  /**
+   * Get TCP signaling server instance (for host)
+   */
+  static getServer() {
+    return tcpSignalingServer;
   }
 
   /**
@@ -48,10 +66,10 @@ class SignalingManager {
   }
 
   /**
-   * Server cannot run in React Native
+   * Check if server is running
    */
   static isServerRunning(): boolean {
-    return false;
+    return tcpSignalingServer.isRunning();
   }
 
   /**
@@ -62,10 +80,18 @@ class SignalingManager {
   }
 
   /**
+   * Get server port (if running)
+   */
+  static getServerPort(): number {
+    return tcpSignalingServer.getPort();
+  }
+
+  /**
    * Clean up all instances (call on app cleanup)
    */
   static async cleanup(): Promise<void> {
     this.disconnectClient();
+    await this.stopServer();
   }
 }
 

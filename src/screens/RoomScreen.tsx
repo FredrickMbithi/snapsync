@@ -18,7 +18,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAppStore } from '../store/appStore';
 import { formatQRData } from '../utils/roomCode';
 import SignalingManager from '../networking/signalingManager';
-import { colors, borderRadius, spacing } from '../utils/theme';
+import { colors, borderRadius, spacing, shadows } from '../utils/theme';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Room'>;
@@ -86,6 +86,11 @@ export default function RoomScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
       
+      <View style={styles.background} pointerEvents="none">
+        <View style={styles.glowLeft} />
+        <View style={styles.glowRight} />
+      </View>
+      
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -103,6 +108,9 @@ export default function RoomScreen({ navigation }: Props) {
                   <Text style={styles.qrBtnText}>📱 QR</Text>
                 </TouchableOpacity>
               )}
+            </View>
+            <View style={styles.rolePill}>
+              <Text style={styles.rolePillText}>{currentRoom.isHost ? 'You are the host' : 'You joined as guest'}</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -232,12 +240,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  background: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  glowLeft: {
+    position: 'absolute',
+    top: -100,
+    left: -60,
+    width: 260,
+    height: 260,
+    borderRadius: 180,
+    backgroundColor: colors.goldGlow,
+    opacity: 0.35,
+  },
+  glowRight: {
+    position: 'absolute',
+    bottom: -140,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 200,
+    backgroundColor: colors.surface3,
+    opacity: 0.25,
+  },
   
   // Header
   header: {
-    backgroundColor: colors.surface1,
+    backgroundColor: colors.surfaceGlass,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    ...shadows.soft,
   },
   headerTop: {
     flexDirection: 'row',
@@ -285,6 +317,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
   },
+  rolePill: {
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignSelf: 'flex-start',
+  },
+  rolePillText: {
+    color: colors.text3,
+    fontSize: 12,
+    letterSpacing: 0.3,
+  },
   leaveBtn: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
     paddingHorizontal: 14,
@@ -306,6 +353,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.surface2,
     gap: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   stat: {
     alignItems: 'center',
@@ -346,10 +395,11 @@ const styles = StyleSheet.create({
   
   // Members
   membersContainer: {
-    backgroundColor: colors.surface1,
+    backgroundColor: colors.surfaceGlass,
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    ...shadows.soft,
   },
   membersList: {
     paddingHorizontal: spacing.lg,
@@ -394,6 +444,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
+    backgroundColor: colors.surfaceGlass,
+    margin: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
   },
   emptyIcon: {
     fontSize: 48,
@@ -450,15 +506,17 @@ const styles = StyleSheet.create({
   uploadStrip: {
     padding: spacing.lg,
     paddingBottom: spacing.xl,
-    backgroundColor: colors.surface1,
+    backgroundColor: colors.surfaceGlass,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.soft,
   },
   uploadBtn: {
     backgroundColor: colors.gold,
     paddingVertical: 16,
     borderRadius: borderRadius.md,
     alignItems: 'center',
+    ...shadows.glow,
   },
   uploadBtnText: {
     color: colors.bg,
